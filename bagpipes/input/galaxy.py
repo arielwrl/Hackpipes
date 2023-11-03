@@ -20,6 +20,10 @@ class galaxy:
         string denoting the ID of the object to be loaded. This will be
         passed to load_data.
 
+    catalog : str
+        string denoting the catalog where to find the ID, implemented 
+        to allow load_data to be defined in an external file
+
     load_data : function
         User-defined function which should take ID as an argument and
         return spectroscopic and/or photometric data. Spectroscopy
@@ -45,6 +49,9 @@ class galaxy:
         Units of the input spectrum, defaults to ergs s^-1 cm^-2 A^-1,
         "ergscma". Other units (microjanskys; mujy) will be converted to
         ergscma by default within the class (see out_units).
+    
+    spec_waves : array - optional
+        spec_waves to make spectra pretier
 
     phot_units : str - optional
         Units of the input photometry, defaults to microjanskys, "mujy"
@@ -73,19 +80,20 @@ class galaxy:
 
     """
 
-    def __init__(self, ID, load_data, spec_units="ergscma", phot_units="mujy",
+    def __init__(self, ID, catalog, load_data, spec_units="ergscma", phot_units="mujy",
                  spectrum_exists=True, photometry_exists=True, filt_list=None,
-                 out_units="ergscma", load_indices=None, index_list=None,
+                 out_units="ergscma", spec_wavs=None, load_indices=None, index_list=None,
                  index_redshift=None, input_spec_cov_matrix=False):
 
         self.ID = str(ID)
+        self.catalog = catalog  
         self.phot_units = phot_units
         self.spec_units = spec_units
         self.out_units = out_units
         self.spectrum_exists = spectrum_exists
         self.photometry_exists = photometry_exists
         self.filt_list = filt_list
-        self.spec_wavs = None
+        self.spec_wavs = spec_wavs
         self.index_list = index_list
         self.index_redshift = index_redshift
 
@@ -95,13 +103,13 @@ class galaxy:
                 raise ValueError("Bagpipes: Object must have some data.")
 
             elif spectrum_exists and not photometry_exists:
-                self.spectrum = load_data(self.ID)
+                self.spectrum = load_data(self.ID, catalog)
 
             elif photometry_exists and not spectrum_exists:
-                phot_nowavs = load_data(self.ID)
+                phot_nowavs = load_data(self.ID, catalog)
 
             else:
-                self.spectrum, phot_nowavs = load_data(self.ID)
+                self.spectrum, phot_nowavs = load_data(self.ID, catalog)
 
         except ValueError:
                 print("load_data did not return expected outputs, did you "
